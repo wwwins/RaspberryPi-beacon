@@ -10,7 +10,7 @@ DEBUG = False
 # https://kernel.googlesource.com/pub/scm/bluetooth/bluez/+/5.6/lib/hci.h for opcodes
 # https://github.com/pauloborges/bluez/blob/master/lib/hci.c#L2782 for functions used by lescan
 
-# performs a simple device inquiry, and returns a list of ble advertizements 
+# performs a simple device inquiry, and returns a list of ble advertizements
 # discovered device
 
 # NOTE: Python's struct.pack() will add padding bytes unless you make the endianness explicit. Little endian
@@ -63,13 +63,13 @@ def returnnumberpacket(pkt):
     for c in pkt:
         myInteger +=  struct.unpack("B",c)[0] * multiple
         multiple = 1
-    return myInteger 
+    return myInteger
 
 def returnstringpacket(pkt):
     myString = "";
     for c in pkt:
         myString +=  "%02x" %struct.unpack("B",c)[0]
-    return myString 
+    return myString
 
 def printpacket(pkt):
     for c in pkt:
@@ -79,7 +79,7 @@ def get_packed_bdaddr(bdaddr_string):
     packable_addr = []
     addr = bdaddr_string.split(':')
     addr.reverse()
-    for b in addr: 
+    for b in addr:
         packable_addr.append(int(b, 16))
     return struct.pack("<BBBBBB", *packable_addr)
 
@@ -124,7 +124,7 @@ def hci_le_set_scan_parameters(sock):
 
 def calculateDistance(rssi,txPower):
     if txPower == 0:
-	return -1.0
+        return -1.0
     if rssi == 0:
         rssi = -1.0
     ratio = rssi*1.0/txPower
@@ -133,7 +133,7 @@ def calculateDistance(rssi,txPower):
     else:
         return ((0.89976)*pow(ratio,7.7095) + 0.111)
     return 1.0
-    
+
 
 def calculateRoughDistance(rssi,txPower):
     ratio = pow(10, (txPower - rssi)/10.0)
@@ -158,13 +158,13 @@ def parse_events(sock, loop_count=100):
     for i in range(0, loop_count):
         pkt = sock.recv(255)
         ptype, event, plen = struct.unpack("BBB", pkt[:3])
-        #print "--------------" 
+        #print "--------------"
         if event == bluez.EVT_INQUIRY_RESULT_WITH_RSSI:
-		i =0
+            i =0
         elif event == bluez.EVT_NUM_COMP_PKTS:
-                i =0 
+            i =0
         elif event == bluez.EVT_DISCONN_COMPLETE:
-                i =0 
+            i =0
         elif event == LE_META_EVENT:
             subevent, = struct.unpack("B", pkt[3])
             pkt = pkt[4:]
@@ -175,47 +175,45 @@ def parse_events(sock, loop_count=100):
                 num_reports = struct.unpack("B", pkt[0])[0]
                 report_pkt_offset = 0
                 for i in range(0, num_reports):
-		
-		    if (DEBUG == True):
-			print "-------------"
-                    	#print "\tfullpacket: ", printpacket(pkt)
-		    	print "\tUDID: ", printpacket(pkt[report_pkt_offset -22: report_pkt_offset - 6])
-		    	print "\tMAJOR: ", printpacket(pkt[report_pkt_offset -6: report_pkt_offset - 4])
-		    	print "\tMINOR: ", printpacket(pkt[report_pkt_offset -4: report_pkt_offset - 2])
-                    	print "\tMAC address: ", packed_bdaddr_to_string(pkt[report_pkt_offset + 3:report_pkt_offset + 9])
-		    	# commented out - don't know what this byte is.  It's NOT TXPower
-                    	txpower, = struct.unpack("b", pkt[report_pkt_offset -2])
-                    	print "\t(Unknown):", txpower
-	
-                    	rssi, = struct.unpack("b", pkt[report_pkt_offset -1])
-                    	print "\tRSSI:", rssi
 
-                    uuid = returnstringpacket(pkt[report_pkt_offset -22: report_pkt_offset - 6])
-                    if uuid in beaconList:
-		        # build the return string
-                        Adstring = packed_bdaddr_to_string(pkt[report_pkt_offset + 3:report_pkt_offset + 9])
-		        Adstring += ","
-		        Adstring += returnstringpacket(pkt[report_pkt_offset -22: report_pkt_offset - 6]) 
-		        Adstring += ","
-		        Adstring += "%i" % returnnumberpacket(pkt[report_pkt_offset -6: report_pkt_offset - 4]) 
-		        Adstring += ","
-		        Adstring += "%i" % returnnumberpacket(pkt[report_pkt_offset -4: report_pkt_offset - 2]) 
-		        Adstring += ","
-                        txPower = struct.unpack("b", pkt[report_pkt_offset -2])
-#		        Adstring += "%i" % struct.unpack("b", pkt[report_pkt_offset -2])
-                        Adstring += "%i" % txPower
-		        Adstring += ","
-                        rssi = struct.unpack("b", pkt[report_pkt_offset -1])
-#		        Adstring += "%i" % struct.unpack("b", pkt[report_pkt_offset -1])
-                        Adstring += "%i," % rssi
-                        Adstring += "[%.1fm]," % calculateDistance(rssi[0], txPower[0])
-                        Adstring += "[%.1fm]" % calculateRoughDistance(rssi[0], txPower[0])
-                    
-		        #print "\tAdstring=", Adstring
-#                        if Adstring not in myFullList:
- 		        myFullList.append(Adstring)
+            if (DEBUG == True):
+                print "-------------"
+                        #print "\tfullpacket: ", printpacket(pkt)
+                print "\tUDID: ", printpacket(pkt[report_pkt_offset -22: report_pkt_offset - 6])
+                print "\tMAJOR: ", printpacket(pkt[report_pkt_offset -6: report_pkt_offset - 4])
+                print "\tMINOR: ", printpacket(pkt[report_pkt_offset -4: report_pkt_offset - 2])
+                print "\tMAC address: ", packed_bdaddr_to_string(pkt[report_pkt_offset + 3:report_pkt_offset + 9])
+                # commented out - don't know what this byte is.  It's NOT TXPower
+                txpower, = struct.unpack("b", pkt[report_pkt_offset -2])
+                print "\t(Unknown):", txpower
+
+                rssi, = struct.unpack("b", pkt[report_pkt_offset -1])
+                print "\tRSSI:", rssi
+
+                uuid = returnstringpacket(pkt[report_pkt_offset -22: report_pkt_offset - 6])
+                if uuid in beaconList:
+                # build the return string
+                Adstring = packed_bdaddr_to_string(pkt[report_pkt_offset + 3:report_pkt_offset + 9])
+                Adstring += ","
+                Adstring += returnstringpacket(pkt[report_pkt_offset -22: report_pkt_offset - 6])
+                Adstring += ","
+                Adstring += "%i" % returnnumberpacket(pkt[report_pkt_offset -6: report_pkt_offset - 4])
+                Adstring += ","
+                Adstring += "%i" % returnnumberpacket(pkt[report_pkt_offset -4: report_pkt_offset - 2])
+                Adstring += ","
+                txPower = struct.unpack("b", pkt[report_pkt_offset -2])
+                #Adstring += "%i" % struct.unpack("b", pkt[report_pkt_offset -2])
+                Adstring += "%i" % txPower
+                Adstring += ","
+                rssi = struct.unpack("b", pkt[report_pkt_offset -1])
+                #Adstring += "%i" % struct.unpack("b", pkt[report_pkt_offset -1])
+                Adstring += "%i," % rssi
+                Adstring += "[%.1fm]," % calculateDistance(rssi[0], txPower[0])
+                Adstring += "[%.1fm]" % calculateRoughDistance(rssi[0], txPower[0])
+
+                #print "\tAdstring=", Adstring
+                #if Adstring not in myFullList:
+                    myFullList.append(Adstring)
                 done = True
     sock.setsockopt( bluez.SOL_HCI, bluez.HCI_FILTER, old_filter )
     return myFullList
-
-
