@@ -132,7 +132,7 @@ def hci_le_set_scan_parameters(sock):
 
 def calculateDistance(rssi,txPower):
     if txPower == 0:
-    return -1.0
+        return -1.0
     if rssi == 0:
         rssi = -1.0
     ratio = rssi*1.0/txPower
@@ -167,11 +167,11 @@ def parse_events(sock, loop_count=100):
         ptype, event, plen = struct.unpack("BBB", pkt[:3])
         #print "--------------"
         if event == bluez.EVT_INQUIRY_RESULT_WITH_RSSI:
-        i =0
+            i =0
         elif event == bluez.EVT_NUM_COMP_PKTS:
-                i =0
+            i =0
         elif event == bluez.EVT_DISCONN_COMPLETE:
-                i =0
+            i =0
         elif event == LE_META_EVENT:
             subevent, = struct.unpack("B", pkt[3])
             pkt = pkt[4:]
@@ -212,11 +212,11 @@ def parse_events(sock, loop_count=100):
                 #Adstring += "%i" % struct.unpack("b", pkt[report_pkt_offset -2])
                 Adstring += "%i" % txPower
                 Adstring += ","
-                        rssi = struct.unpack("b", pkt[report_pkt_offset -1])
-                        #Adstring += "%i" % struct.unpack("b", pkt[report_pkt_offset -1])
-                        Adstring += "%i," % rssi
-                        Adstring += "[%.1fm]," % calculateDistance(rssi[0], txPower[0])
-                        Adstring += "[%.1fm]" % calculateRoughDistance(rssi[0], txPower[0])
+                rssi = struct.unpack("b", pkt[report_pkt_offset -1])
+                #Adstring += "%i" % struct.unpack("b", pkt[report_pkt_offset -1])
+                Adstring += "%i," % rssi
+                Adstring += "[%.1fm]," % calculateDistance(rssi[0], txPower[0])
+                Adstring += "[%.1fm]" % calculateRoughDistance(rssi[0], txPower[0])
 
                 #print "\tAdstring=", Adstring
                 #if Adstring not in myFullList:
