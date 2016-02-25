@@ -20,7 +20,13 @@ import os
 import sys
 import struct
 import math
+import socket, errno
+from netcat import netcat
 import bluetooth._bluetooth as bluez
+
+import led
+
+NODE_ID = 1
 
 LE_META_EVENT = 0x3e
 LE_PUBLIC_ADDRESS = 0x00
@@ -49,9 +55,8 @@ ADV_SCAN_RSP = 0x04
 
 beaconList = []
 
-
 def readBeaconList():
-    f = file("beaconlist.txt")
+    f = file("/root/bin/beaconlist.txt")
     print "----------"
     for line in f:
         if not line.startswith('#'):
@@ -163,8 +168,8 @@ def parse_events(sock, loop_count=100):
     bluez.hci_filter_set_ptype(flt, bluez.HCI_EVENT_PKT)
     sock.setsockopt(bluez.SOL_HCI, bluez.HCI_FILTER, flt)
     done = False
-    results = []
     myFullList = []
+    distances = []
     for i in range(0, loop_count):
         pkt = sock.recv(255)
         ptype, event, plen = struct.unpack("BBB", pkt[:3])
@@ -217,12 +222,31 @@ def parse_events(sock, loop_count=100):
                         rssi = struct.unpack("b", pkt[report_pkt_offset - 1])
 #		        Adstring += "%i" % struct.unpack("b", pkt[report_pkt_offset -1])
                         Adstring += "%i," % rssi
-                        Adstring += "[%.1fm]," % calculateDistance(rssi[0], txPower[0])
-                        Adstring += "[%.1fm]" % calculateRoughDistance(rssi[0], txPower[0])
+                        dist = calculateDistance(rssi[0], txPower[0])
+                        distances.append(dist)
+                        Adstring += "[%.2fm]," % dist
+                        Adstring += "[%.2fm]" % calculateRoughDistance(rssi[0], txPower[0])
 
                         # print "\tAdstring=", Adstring
 #                        if Adstring not in myFullList:
                         myFullList.append(Adstring)
+
                 done = True
+
+    if len(distances)>2:
+        distances.remove(max(distances))
+        distances.remove(min(distances))
+        avg = sum(distances) / float(len(distances))
+        print "avg:",avg
+        cmd = 'DIST '+str(NODE_ID)+' 1 9 '+str(avg)
+        print "cmd:",cmd
+        try:
+            netcat('localhost',8888,cmd)
+        except socket.error as e:
+            print "Socket Error"
+        if avg < 0.3:
+            print "***** blink *****"
+        #     led.flash_led(led.LED_PIN,3,0.2)
+
     sock.setsockopt(bluez.SOL_HCI, bluez.HCI_FILTER, old_filter)
     return myFullList
